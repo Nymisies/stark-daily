@@ -16,7 +16,7 @@ const TASKS = [
   { id: 'skool_up', label: 'Skool hochladen',         icon: '⬆️', type: 'check', pts: 10, weekly: true },
 ];
 
-const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', icon: '🌙', type: 'sleep', pts: 0 };
+const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', img: 'images/tasks/sleep.png', type: 'sleep', pts: 0 };
 const SLEEP_OPTIONS = [
   { val: 22, label: '🌙 22 Uhr',           pts: 60 },
   { val: 23, label: '🌙 23 Uhr',           pts: 40 },
@@ -388,8 +388,11 @@ function renderTasks() {
       const opt = SLEEP_OPTIONS.find(o => o.val === done.sleepVal);
       sleepLabel = opt ? `✓ ${opt.label} · +${done.sleepPts} Pkt.` : '✓ Erledigt';
     }
+    const sleepIconHtml = t.img
+      ? `<img src="${t.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
+      : `<div class="task-icon">${t.icon}</div>`;
     card.innerHTML = `
-      <div class="task-icon">${t.icon}</div>
+      ${sleepIconHtml}
       <div class="task-info">
         <div class="task-label">${t.label}</div>
         <div class="task-sub">${done ? sleepLabel : 'Wann gehst du schlafen?'}</div>

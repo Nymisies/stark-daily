@@ -16,14 +16,21 @@
 }
 
 body {
-  background: url('images/hintergrund.jpg') center center / cover no-repeat fixed;
   background-color: #0f0f1a;
   color: var(--text);
   font-family: 'Segoe UI', system-ui, sans-serif;
   min-height: 100vh;
   padding-bottom: 80px;
   overflow-x: hidden;
-  position: relative;
+}
+
+/* Festes Hintergrundbild — funktioniert auch auf Mobilgeräten */
+.bg-fixed {
+  position: fixed;
+  inset: 0;
+  background: url('images/hintergrund.jpg') center center / cover no-repeat;
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* NAV */
