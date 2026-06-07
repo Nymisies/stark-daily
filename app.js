@@ -211,6 +211,38 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// ── PERIOD ───────────────────────────────────────────────────────────────────
+
+let currentPeriod = 'week';
+
+function setPeriod(p) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + p).classList.add('active');
+  renderStats();
+}
+
+function getDaysForPeriod(period) {
+  const all = Object.entries(state.days || {}).sort();
+  const now = new Date();
+  let cutoff;
+  if (period === 'week') {
+    cutoff = new Date(now); cutoff.setDate(now.getDate() - 7);
+  } else if (period === 'month') {
+    cutoff = new Date(now); cutoff.setMonth(now.getMonth() - 1);
+  } else {
+    cutoff = new Date(now); cutoff.setFullYear(now.getFullYear() - 1);
+  }
+  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  return all.filter(([k]) => k >= cutoffKey);
+}
+
+function getPeriodLabel(period) {
+  if (period === 'week')  return 'Letzte 7 Tage';
+  if (period === 'month') return 'Letzter Monat';
+  return 'Letztes Jahr';
+}
+
 // ── RENDER ───────────────────────────────────────────────────────────────────
 
 function renderAll() {
@@ -336,38 +368,49 @@ function renderTasks() {
 }
 
 function renderStats() {
-  const allDays = Object.entries(state.days || {}).sort();
-  const last7 = allDays.slice(-7);
+  const days = getDaysForPeriod(currentPeriod);
+  document.getElementById('stats-period-label').textContent = getPeriodLabel(currentPeriod);
 
-  // totals
-  let totalMembers = 0, totalInvoices = 0, totalMails = 0, totalDays = 0, totalPts7 = 0;
-  for (const [, day] of last7) {
-    totalDays++;
-    totalMembers += (day.tasks.members?.count || 0);
+  let totalMembers = 0, totalInvoices = 0, totalMails = 0, totalInstagram = 0, totalReceipts = 0;
+  for (const [, day] of days) {
+    totalMembers  += (day.tasks.members?.count  || 0);
     totalInvoices += (day.tasks.invoices?.count || 0);
-    totalMails += (day.tasks.mails?.count || 0);
+    totalMails    += (day.tasks.mails?.count    || 0);
+    totalReceipts += (day.tasks.receipts?.count || 0);
+    if (day.tasks.instagram?.done) totalInstagram++;
   }
 
-  document.getElementById('stat-members').textContent = totalMembers;
+  document.getElementById('stat-members').textContent  = totalMembers;
   document.getElementById('stat-invoices').textContent = totalInvoices;
-  document.getElementById('stat-mails').textContent = totalMails;
-  document.getElementById('stat-streak').textContent = state.streak || 0;
+  document.getElementById('stat-mails').textContent    = totalMails;
+  document.getElementById('stat-streak').textContent   = state.streak || 0;
+  document.getElementById('stat-instagram').textContent = totalInstagram;
+  document.getElementById('stat-receipts').textContent  = totalReceipts;
 
-  // week bars
+  // Balken
   const barContainer = document.getElementById('week-bars');
   barContainer.innerHTML = '';
-  const taskIds = ['members', 'invoices', 'mails', 'instagram', 'skool_msg'];
-  const taskLabels = { members: '👥 Mitglieder', invoices: '🧾 Rechnungen', mails: '📧 Mails', instagram: '📸 Instagram', skool_msg: '💬 Skool' };
+  const taskIds    = ['members', 'invoices', 'mails', 'receipts', 'instagram', 'skool_msg'];
+  const taskLabels = {
+    members:   '👥 Mitglieder',
+    invoices:  '🧾 Rechnungen',
+    mails:     '📧 Mails',
+    receipts:  '🗂️ Belege',
+    instagram: '📸 Instagram',
+    skool_msg: '💬 Skool'
+  };
 
   for (const id of taskIds) {
     const t = TASKS.find(x => x.id === id);
     if (!t) continue;
     let total = 0;
-    for (const [, day] of last7) {
+    for (const [, day] of days) {
       if (t.type === 'count') total += (day.tasks[id]?.count || 0);
       else if (day.tasks[id]?.done) total += 1;
     }
-    const maxVal = t.type === 'count' ? Math.max(total, 10) : 7;
+    if (total === 0 && days.length === 0) continue;
+    const maxDays = days.length || 1;
+    const maxVal = t.type === 'count' ? Math.max(total, maxDays) : maxDays;
     const pct = Math.min(100, Math.round((total / maxVal) * 100));
     const unit = t.type === 'count' ? 'Stk.' : 'Tage';
     barContainer.innerHTML += `

@@ -31,14 +31,7 @@ body::before {
   position: fixed;
   inset: 0;
   background: url('images/hintergrund.jpg') center center / cover no-repeat;
-  opacity: 0.35;
-  z-index: -1;
-}
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(15,15,26,0.6) 0%, rgba(30,20,60,0.5) 100%);
+  opacity: 1;
   z-index: -1;
 }
 
@@ -451,6 +444,31 @@ body::after {
   white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* PERIOD TABS */
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.period-tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(12px);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.period-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
 
 .date-label {
   text-align: center;

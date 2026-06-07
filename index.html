@@ -61,8 +61,15 @@
 <!-- VIEW: STATISTIKEN -->
 <div class="view" id="view-stats">
   <div class="hero-header" style="margin-bottom:16px">
-    <div style="font-size:13px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;font-weight:700">Letzte 7 Tage</div>
-    <div style="font-size:22px;font-weight:800;margin-top:4px">Deine Statistiken</div>
+    <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700">Deine Statistiken</div>
+    <div style="font-size:22px;font-weight:800;margin-top:4px;color:#1a1a2e" id="stats-period-label">Letzte 7 Tage</div>
+  </div>
+
+  <!-- Zeitraum-Tabs -->
+  <div class="period-tabs">
+    <button class="period-tab active" id="tab-week"  onclick="setPeriod('week')">Woche</button>
+    <button class="period-tab"        id="tab-month" onclick="setPeriod('month')">Monat</button>
+    <button class="period-tab"        id="tab-year"  onclick="setPeriod('year')">Jahr</button>
   </div>
 
   <div class="stats-grid">
@@ -82,9 +89,17 @@
       <div class="stat-value" id="stat-streak">0</div>
       <div class="stat-label">🔥 Streak (Tage)</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-instagram">0</div>
+      <div class="stat-label">📸 Instagram</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-receipts">0</div>
+      <div class="stat-label">🗂️ Belege</div>
+    </div>
   </div>
 
-  <div class="section-title">Wochenübersicht</div>
+  <div class="section-title" id="bars-title">Detailübersicht</div>
   <div id="week-bars"></div>
 </div>
 
