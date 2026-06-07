@@ -3,13 +3,13 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 
 const TASKS = [
-  { id: 'members',  label: 'Mitglieder einpflegen', icon: '👥', type: 'count', pts: 10, perItem: 2 },
-  { id: 'invoices', label: 'Rechnungen schreiben',  icon: '🧾', type: 'count', pts: 10, perItem: 5 },
-  { id: 'mails',    label: 'Mails beantworten',     icon: '📧', type: 'count', pts: 10, perItem: 1 },
-  { id: 'post',     label: 'Post & Briefe',          icon: '📬', type: 'count', pts: 10, perItem: 2 },
-  { id: 'receipts', label: 'Belege scannen',         icon: '🗂️', type: 'count', pts: 10, perItem: 2 },
-  { id: 'skool_msg',label: 'Skool Nachrichten',      icon: '💬', type: 'count', pts: 10, perItem: 1 },
-  { id: 'instagram',label: 'Instagram Post',          icon: '📸', type: 'check', pts: 20 },
+  { id: 'members',  label: 'Mitglieder einpflegen', img: 'images/tasks/members.png',  type: 'count', pts: 10, perItem: 2 },
+  { id: 'invoices', label: 'Rechnungen schreiben',  img: 'images/tasks/invoices.png', type: 'count', pts: 10, perItem: 5 },
+  { id: 'mails',    label: 'Mails beantworten',     img: 'images/tasks/mails.png',    type: 'count', pts: 10, perItem: 1 },
+  { id: 'post',     label: 'Post & Briefe',          img: 'images/tasks/post.png',     type: 'count', pts: 10, perItem: 2 },
+  { id: 'receipts', label: 'Belege scannen',         img: 'images/tasks/receipts.png', type: 'count', pts: 10, perItem: 2 },
+  { id: 'skool_msg',label: 'Skool Nachrichten',      img: 'images/tasks/skool_msg.png',type: 'count', pts: 10, perItem: 1 },
+  { id: 'instagram',label: 'Instagram Post',          img: 'images/tasks/instagram.png',type: 'check', pts: 20 },
   { id: 'course1',  label: 'Kurs 2–4 Jahre planen',  icon: '🎓', type: 'check', pts: 15, weekly: true },
   { id: 'course2',  label: 'Kurs 5–10 Jahre planen', icon: '🎓', type: 'check', pts: 15, weekly: true },
   { id: 'course3',  label: 'Kurs 11–14 Jahre planen',icon: '🎓', type: 'check', pts: 15, weekly: true },
@@ -22,11 +22,11 @@ const BONUS_TASKS = [
 ];
 
 const AVATAR_LEVELS = [
-  { min: 0,    emoji: '🧑‍🔧', rank: 'Stufe 1', name: 'Der Lehrling',   color: '#aaa' },
-  { min: 200,  emoji: '👷',   rank: 'Stufe 2', name: 'Der Arbeiter',   color: '#cd7f32' },
-  { min: 500,  emoji: '💼',   rank: 'Stufe 3', name: 'Der Profi',      color: '#a8a9ad' },
-  { min: 1000, emoji: '🦸',   rank: 'Stufe 4', name: 'Der Held',       color: '#ffd700' },
-  { min: 2000, emoji: '⚡',   rank: 'Stufe 5', name: 'Der Superheld',  color: '#6c63ff' },
+  { min: 0,    img: 'images/avatars/lehrling.png',  rank: 'Stufe 1', name: 'Der Lehrling',   color: '#aaa' },
+  { min: 200,  img: 'images/avatars/arbeiter.png',  rank: 'Stufe 2', name: 'Der Arbeiter',   color: '#cd7f32' },
+  { min: 500,  img: 'images/avatars/profi.png',     rank: 'Stufe 3', name: 'Der Profi',      color: '#a8a9ad' },
+  { min: 1000, img: 'images/avatars/held.png',      rank: 'Stufe 4', name: 'Der Held',       color: '#ffd700' },
+  { min: 2000, img: 'images/avatars/superheld.png', rank: 'Stufe 5', name: 'Der Superheld',  color: '#6c63ff' },
 ];
 
 const REWARDS = [
@@ -138,7 +138,12 @@ function openModal(task) {
   const existing = state.days[state.today].tasks[task.id];
   modalCount = existing ? (existing.count || 0) : 0;
 
-  document.getElementById('modal-icon').textContent = task.icon;
+  const iconEl = document.getElementById('modal-icon');
+  if (task.img) {
+    iconEl.innerHTML = `<img src="${task.img}" style="width:64px;height:64px;object-fit:cover;border-radius:14px;margin:0 auto;display:block">`;
+  } else {
+    iconEl.textContent = task.icon;
+  }
   document.getElementById('modal-title').textContent = task.label;
   document.getElementById('modal-subtitle').textContent =
     task.type === 'count'
@@ -218,7 +223,8 @@ function renderAll() {
 
 function renderHeader() {
   const av = getAvatar(state.totalPts || 0);
-  document.getElementById('hdr-emoji').textContent = av.emoji;
+  const el = document.getElementById('hdr-emoji');
+  el.innerHTML = `<img src="${av.img}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   document.getElementById('hdr-rank').textContent = av.rank;
   document.getElementById('hdr-name').textContent = av.name;
   document.getElementById('hdr-pts').textContent = (state.totalPts || 0) + ' Gesamtpunkte';
@@ -265,8 +271,12 @@ function renderTasks() {
       ? (t.type === 'count' ? `✓ Erledigt · ${done.count} Stk.` : '✓ Erledigt')
       : (t.type === 'count' ? 'Tippe zum Abhaken + Anzahl eingeben' : 'Tippe zum Abhaken');
 
+    const iconHtml = t.img
+      ? `<img src="${t.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
+      : `<div class="task-icon">${t.icon}</div>`;
+
     card.innerHTML = `
-      <div class="task-icon">${t.icon}</div>
+      ${iconHtml}
       <div class="task-info">
         <div class="task-label">${t.label}</div>
         <div class="task-sub">${sub}</div>
@@ -378,7 +388,8 @@ function renderAvatarPage() {
   const av = getAvatar(pts);
   const next = getNextLevel(pts);
 
-  document.getElementById('av-emoji').textContent = av.emoji;
+  document.getElementById('av-emoji').innerHTML =
+    `<img src="${av.img}" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid var(--accent);box-shadow:0 0 30px rgba(108,99,255,0.4)">`;
   document.getElementById('av-rank').textContent = av.rank;
   document.getElementById('av-name').textContent = av.name;
   document.getElementById('av-pts-label').textContent = pts + ' Gesamtpunkte';
@@ -400,7 +411,7 @@ function renderAvatarPage() {
     const el = document.createElement('div');
     el.className = 'rank-item' + (isCurrent ? ' current' : '') + (!isUnlocked ? ' locked' : '');
     el.innerHTML = `
-      <div class="rank-emoji">${l.emoji}</div>
+      <img src="${l.img}" style="width:44px;height:44px;object-fit:cover;border-radius:50%;${!isUnlocked ? 'filter:grayscale(1)' : ''}">
       <div class="rank-info">
         <div class="rank-name">${l.name}</div>
         <div class="rank-req">${l.min} Punkte</div>
