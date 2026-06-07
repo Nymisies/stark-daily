@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#6c63ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Stark Daily</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- VIEW: HEUTE -->
+<div class="view active" id="view-today">
+
+  <!-- Header / Avatar -->
+  <div class="hero-header">
+    <div class="avatar-row">
+      <div class="avatar-circle" id="hdr-emoji">🧑‍🔧</div>
+      <div class="avatar-info">
+        <div class="avatar-rank" id="hdr-rank">Stufe 1</div>
+        <div class="avatar-name" id="hdr-name">Der Lehrling</div>
+        <div class="avatar-pts" id="hdr-pts">0 Gesamtpunkte</div>
+      </div>
+      <div class="streak-badge" id="hdr-streak">🔥 0 Tage</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-card">
+    <div class="progress-header">
+      <div class="progress-title">Heutiger Fortschritt</div>
+      <div class="progress-pct" id="prog-pct">0%</div>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+    </div>
+    <div class="rewards-row">
+      <div class="reward-chip" id="r0">
+        <span class="reward-icon">🎬</span>30 Min
+      </div>
+      <div class="reward-chip" id="r1">
+        <span class="reward-icon">🎬</span>+30 Min
+      </div>
+      <div class="reward-chip" id="r2">
+        <span class="reward-icon">🏆</span>+1 Std
+      </div>
+    </div>
+  </div>
+
+  <!-- Task list (rendered by JS) -->
+  <div id="task-list"></div>
+
+</div>
+
+<!-- VIEW: STATISTIKEN -->
+<div class="view" id="view-stats">
+  <div class="hero-header" style="margin-bottom:16px">
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;font-weight:700">Letzte 7 Tage</div>
+    <div style="font-size:22px;font-weight:800;margin-top:4px">Deine Statistiken</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-members">0</div>
+      <div class="stat-label">👥 Mitglieder</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-invoices">0</div>
+      <div class="stat-label">🧾 Rechnungen</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-mails">0</div>
+      <div class="stat-label">📧 Mails</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-streak">0</div>
+      <div class="stat-label">🔥 Streak (Tage)</div>
+    </div>
+  </div>
+
+  <div class="section-title">Wochenübersicht</div>
+  <div id="week-bars"></div>
+</div>
+
+<!-- VIEW: AVATAR -->
+<div class="view" id="view-avatar">
+  <div class="avatar-page-card">
+    <div class="avatar-big" id="av-emoji">🧑‍🔧</div>
+    <div class="avatar-rank-big" id="av-rank">Stufe 1</div>
+    <div class="avatar-name-big" id="av-name">Der Lehrling</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5)" id="av-pts-label">0 Gesamtpunkte</div>
+    <div class="xp-bar-bg">
+      <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+    </div>
+    <div class="xp-label" id="xp-label">Nächste Stufe: 200 Punkte</div>
+  </div>
+
+  <div class="section-title">Alle Ränge</div>
+  <div class="rank-list" id="rank-list"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-today" onclick="switchView('today')">
+    <span class="nav-icon">✅</span>Heute
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="switchView('stats')">
+    <span class="nav-icon">📊</span>Statistik
+  </button>
+  <button class="nav-btn" id="nav-avatar" onclick="switchView('avatar')">
+    <span class="nav-icon">⚡</span>Avatar
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-task-icon" id="modal-icon">📋</div>
+    <div class="modal-title" id="modal-title">Aufgabe</div>
+    <div class="modal-subtitle" id="modal-subtitle">Hast du dich darum gekümmert?</div>
+
+    <!-- Count input -->
+    <div class="count-input-row" id="modal-count-row">
+      <button class="count-btn" id="btn-minus">−</button>
+      <div>
+        <div class="count-display" id="modal-count">0</div>
+        <div class="count-label">Anzahl</div>
+      </div>
+      <button class="count-btn" id="btn-plus">+</button>
+    </div>
+
+    <!-- Check only -->
+    <div id="modal-check-row" style="display:none;text-align:center;padding:20px 0;font-size:14px;color:var(--muted)">
+      Bestätige, dass du das heute gemacht hast.
+    </div>
+
+    <div class="modal-btn-row">
+      <button class="btn btn-secondary" id="btn-cancel">Abbrechen</button>
+      <button class="btn btn-primary" id="btn-confirm">Ja, erledigt! ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
