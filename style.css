@@ -16,23 +16,14 @@
 }
 
 body {
-  background: var(--bg);
+  background: url('images/hintergrund.jpg') center center / cover no-repeat fixed;
+  background-color: #0f0f1a;
   color: var(--text);
   font-family: 'Segoe UI', system-ui, sans-serif;
   min-height: 100vh;
   padding-bottom: 80px;
   overflow-x: hidden;
   position: relative;
-}
-
-/* HINTERGRUNDBILD */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: url('images/hintergrund.jpg') center center / cover no-repeat;
-  opacity: 1;
-  z-index: -1;
 }
 
 /* NAV */
@@ -428,6 +419,26 @@ body::before {
 .rank-badge.current { background: rgba(255,215,0,0.2); color: var(--gold); }
 .rank-badge.done { background: rgba(0,212,170,0.2); color: var(--green); }
 
+/* SLEEP BUTTONS */
+.sleep-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 2px solid rgba(108,99,255,0.2);
+  background: rgba(108,99,255,0.07);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sleep-btn.selected {
+  border-color: var(--accent);
+  background: rgba(108,99,255,0.15);
+}
+.sleep-time { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.sleep-pts  { font-size: 13px; font-weight: 700; color: var(--accent); }
+
 /* Toast */
 .toast {
   position: fixed;
@@ -448,26 +459,31 @@ body::before {
 /* PERIOD TABS */
 .period-tabs {
   display: flex;
-  gap: 8px;
+  gap: 0;
   margin-bottom: 16px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 16px;
+  padding: 5px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 .period-tab {
   flex: 1;
-  padding: 10px;
+  padding: 13px 8px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(12px);
-  font-size: 14px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
   font-weight: 700;
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
 }
 .period-tab.active {
   background: var(--accent);
-  border-color: var(--accent);
   color: white;
+  box-shadow: 0 4px 12px rgba(108,99,255,0.4);
 }
 
 .date-label {

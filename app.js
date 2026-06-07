@@ -16,6 +16,14 @@ const TASKS = [
   { id: 'skool_up', label: 'Skool hochladen',         icon: '⬆️', type: 'check', pts: 10, weekly: true },
 ];
 
+const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', icon: '🌙', type: 'sleep', pts: 0 };
+const SLEEP_OPTIONS = [
+  { val: 22, label: '🌙 22 Uhr',           pts: 60 },
+  { val: 23, label: '🌙 23 Uhr',           pts: 40 },
+  { val: 24, label: '🕛 Mitternacht',       pts: 20 },
+  { val: 99, label: '😴 Nach Mitternacht', pts: 0  },
+];
+
 const BONUS_TASKS = [
   { id: 'walk',  label: 'Spazieren gehen', icon: '🚶', pts: 15 },
   { id: 'dance', label: 'Tanzen',           icon: '💃', pts: 20 },
@@ -132,6 +140,7 @@ function updateStreak() {
 
 let modalTask = null;
 let modalCount = 0;
+let selectedSleep = null;
 
 function openModal(task) {
   modalTask = task;
@@ -151,6 +160,9 @@ function openModal(task) {
       : 'Hast du das heute gemacht?';
   document.getElementById('modal-count-row').style.display = task.type === 'count' ? 'flex' : 'none';
   document.getElementById('modal-check-row').style.display = task.type === 'check' ? 'block' : 'none';
+  document.getElementById('modal-sleep-row').style.display = task.type === 'sleep' ? 'block' : 'none';
+  selectedSleep = null;
+  document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected'));
   updateCountDisplay();
 
   document.getElementById('modal').classList.add('open');
@@ -165,15 +177,29 @@ function updateCountDisplay() {
   document.getElementById('modal-count').textContent = modalCount;
 }
 
+function selectSleep(btn) {
+  document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedSleep = parseInt(btn.dataset.val);
+}
+
 function confirmModal() {
   if (!modalTask) return;
+  if (modalTask.type === 'sleep' && selectedSleep === null) {
+    showToast('⚠️ Bitte eine Uhrzeit auswählen!');
+    return;
+  }
   const day = state.days[state.today];
   day.tasks[modalTask.id] = { done: true, count: modalCount };
 
-  // accumulate total pts delta
-  const before = state.totalPts;
   let delta = modalTask.pts;
   if (modalTask.type === 'count') delta += modalCount * modalTask.perItem;
+  if (modalTask.type === 'sleep') {
+    const opt = SLEEP_OPTIONS.find(o => o.val === selectedSleep);
+    delta = opt ? opt.pts : 0;
+    day.tasks[modalTask.id].sleepVal = selectedSleep;
+    day.tasks[modalTask.id].sleepPts = delta;
+  }
   state.totalPts = (state.totalPts || 0) + delta;
 
   // weekly tracking
@@ -345,6 +371,36 @@ function renderTasks() {
     list.appendChild(card);
   }
 
+  // Section: Schlafenszeit
+  const st2 = document.createElement('div');
+  st2.className = 'section-title';
+  st2.textContent = 'Schlafenszeit';
+  list.appendChild(st2);
+
+  {
+    const t = SLEEP_TASK;
+    const done = day.tasks[t.id];
+    const card = document.createElement('div');
+    card.className = 'task-card' + (done ? ' done' : '');
+    card.onclick = () => done ? null : openModal(t);
+    let sleepLabel = '';
+    if (done && done.sleepVal) {
+      const opt = SLEEP_OPTIONS.find(o => o.val === done.sleepVal);
+      sleepLabel = opt ? `✓ ${opt.label} · +${done.sleepPts} Pkt.` : '✓ Erledigt';
+    }
+    card.innerHTML = `
+      <div class="task-icon">${t.icon}</div>
+      <div class="task-info">
+        <div class="task-label">${t.label}</div>
+        <div class="task-sub">${done ? sleepLabel : 'Wann gehst du schlafen?'}</div>
+      </div>
+      <div class="task-right">
+        <div class="task-pts">bis +60 Pkt</div>
+        <div class="task-check">${done ? '✓' : ''}</div>
+      </div>`;
+    list.appendChild(card);
+  }
+
   // Section: Bonus
   const bt = document.createElement('div');
   bt.className = 'section-title';
@@ -372,20 +428,30 @@ function renderStats() {
   document.getElementById('stats-period-label').textContent = getPeriodLabel(currentPeriod);
 
   let totalMembers = 0, totalInvoices = 0, totalMails = 0, totalInstagram = 0, totalReceipts = 0;
+  let sleep22 = 0, sleep23 = 0, sleep24 = 0, sleep99 = 0;
   for (const [, day] of days) {
     totalMembers  += (day.tasks.members?.count  || 0);
     totalInvoices += (day.tasks.invoices?.count || 0);
     totalMails    += (day.tasks.mails?.count    || 0);
     totalReceipts += (day.tasks.receipts?.count || 0);
     if (day.tasks.instagram?.done) totalInstagram++;
+    const sv = day.tasks.sleep?.sleepVal;
+    if (sv === 22) sleep22++;
+    else if (sv === 23) sleep23++;
+    else if (sv === 24) sleep24++;
+    else if (sv === 99) sleep99++;
   }
 
-  document.getElementById('stat-members').textContent  = totalMembers;
-  document.getElementById('stat-invoices').textContent = totalInvoices;
-  document.getElementById('stat-mails').textContent    = totalMails;
-  document.getElementById('stat-streak').textContent   = state.streak || 0;
+  document.getElementById('stat-members').textContent   = totalMembers;
+  document.getElementById('stat-invoices').textContent  = totalInvoices;
+  document.getElementById('stat-mails').textContent     = totalMails;
+  document.getElementById('stat-streak').textContent    = state.streak || 0;
   document.getElementById('stat-instagram').textContent = totalInstagram;
   document.getElementById('stat-receipts').textContent  = totalReceipts;
+  document.getElementById('stat-sleep22').textContent   = sleep22;
+  document.getElementById('stat-sleep23').textContent   = sleep23;
+  document.getElementById('stat-sleep24').textContent   = sleep24;
+  document.getElementById('stat-sleep99').textContent   = sleep99;
 
   // Balken
   const barContainer = document.getElementById('week-bars');
