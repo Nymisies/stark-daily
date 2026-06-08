@@ -373,8 +373,11 @@ function renderTasks() {
     card.className = 'task-card' + (done ? ' done' : '');
     card.onclick = () => done ? null : openModal(t);
 
+    const weeklyIconHtml = t.img
+      ? `<img src="${t.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
+      : `<div class="task-icon">${t.icon}</div>`;
     card.innerHTML = `
-      <div class="task-icon">${t.icon}</div>
+      ${weeklyIconHtml}
       <div class="task-info">
         <div class="task-label">${t.label} <span class="weekly-tag">Woche</span></div>
         <div class="task-sub">${done ? '✓ Diese Woche erledigt' : 'Tippe zum Abhaken'}</div>
