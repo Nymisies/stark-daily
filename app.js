@@ -18,20 +18,13 @@ const TASKS = [
 
 const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', img: 'images/tasks/sleep.png', type: 'sleep', pts: 0 };
 
-// Monatsaufgaben: am 1. und 13. des Monats
+// Monatliche Aufgaben — einmal pro Monat zu erledigen
 const MONTHLY_TASKS = [
-  { id: 'monthly_1',  label: 'Gehälter bezahlen & Geld anweisen', icon: '💰', type: 'check', pts: 30, day: 1  },
-  { id: 'monthly_13', label: 'Geld anweisen & Vorsteuer fertig',   icon: '📊', type: 'check', pts: 30, day: 13 },
+  { id: 'gehalt',    label: 'Gehalt zahlen',            icon: '💰', type: 'check', pts: 30, hint: 'Anfang des Monats' },
+  { id: 'geld1',     label: 'Geld anweisen (Anfang)',   icon: '💸', type: 'check', pts: 20, hint: 'Anfang des Monats' },
+  { id: 'geld2',     label: 'Geld anweisen (Mitte)',    icon: '💸', type: 'check', pts: 20, hint: 'Um den 13.' },
+  { id: 'vorsteuer', label: 'Vorsteuer fertig machen',  icon: '📊', type: 'check', pts: 30, hint: 'Um den 13.' },
 ];
-
-function getMonthlyTasksForToday() {
-  const dayOfMonth = new Date().getDate();
-  // Zeige die Aufgabe vom 1. die ersten 3 Tage, vom 13. am 13.–15.
-  return MONTHLY_TASKS.filter(t =>
-    (t.day === 1  && dayOfMonth >= 1  && dayOfMonth <= 3) ||
-    (t.day === 13 && dayOfMonth >= 13 && dayOfMonth <= 15)
-  );
-}
 const SLEEP_OPTIONS = [
   { val: 22, label: '🌙 22 Uhr',           pts: 60 },
   { val: 23, label: '🌙 23 Uhr',           pts: 40 },
@@ -71,6 +64,10 @@ function weekKey() {
   return d.toISOString().slice(0, 10);
 }
 
+function monthKey() {
+  return new Date().toISOString().slice(0, 7); // YYYY-MM
+}
+
 function loadState() {
   try { return JSON.parse(localStorage.getItem('starkState') || '{}'); } catch { return {}; }
 }
@@ -88,8 +85,12 @@ function ensureToday() {
   }
   if (!state.weeks) state.weeks = {};
   if (!state.weeks[wk]) state.weeks[wk] = { tasks: {} };
+  const mk = monthKey();
+  if (!state.months) state.months = {};
+  if (!state.months[mk]) state.months[mk] = { tasks: {} };
   state.today = key;
   state.week = wk;
+  state.month = mk;
 }
 
 let state = loadState();
@@ -389,32 +390,37 @@ function renderTasks() {
     list.appendChild(card);
   }
 
-  // Section: Monatsaufgaben (nur wenn relevant)
-  const monthlyToday = getMonthlyTasksForToday();
-  if (monthlyToday.length > 0) {
-    const mt = document.createElement('div');
-    mt.className = 'section-title';
-    mt.innerHTML = '📅 Monatsaufgaben <span style="color:var(--accent2);font-size:11px;font-weight:700;margin-left:6px">AKTUELL</span>';
-    list.appendChild(mt);
+  // Section: Monatlich
+  const mTitle = document.createElement('div');
+  mTitle.className = 'section-title';
+  mTitle.textContent = 'Monatlich';
+  list.appendChild(mTitle);
 
-    for (const t of monthlyToday) {
-      const done = day.tasks[t.id];
-      const card = document.createElement('div');
-      card.className = 'task-card' + (done ? ' done' : '');
-      card.style.borderLeft = '4px solid var(--accent2)';
-      card.onclick = () => done ? null : openModal(t);
-      card.innerHTML = `
-        <div class="task-icon" style="background:rgba(255,101,132,0.15)">${t.icon}</div>
-        <div class="task-info">
-          <div class="task-label">${t.label}</div>
-          <div class="task-sub">${done ? '✓ Erledigt' : '⚡ Monatliche Aufgabe – bitte erledigen!'}</div>
-        </div>
-        <div class="task-right">
-          <div class="task-pts" style="color:var(--accent2)">+${t.pts} Pkt</div>
-          <div class="task-check">${done ? '✓' : ''}</div>
-        </div>`;
-      list.appendChild(card);
-    }
+  for (const t of MONTHLY_TASKS) {
+    const done = state.months[state.month].tasks[t.id];
+    const card = document.createElement('div');
+    card.className = 'task-card' + (done ? ' done' : '');
+    card.onclick = () => {
+      if (done) return;
+      // Monatsaufgaben direkt abhaken (kein Modal nötig)
+      state.months[state.month].tasks[t.id] = { done: true };
+      state.totalPts = (state.totalPts || 0) + t.pts;
+      updateStreak();
+      saveState();
+      renderAll();
+      showToast('✓ ' + t.label + ' erledigt!');
+    };
+    card.innerHTML = `
+      <div class="task-icon" style="background:rgba(255,101,132,0.1);font-size:24px">${t.icon}</div>
+      <div class="task-info">
+        <div class="task-label">${t.label}</div>
+        <div class="task-sub">${done ? '✓ Diesen Monat erledigt' : '📅 ' + t.hint}</div>
+      </div>
+      <div class="task-right">
+        <div class="task-pts" style="color:var(--accent2)">+${t.pts} Pkt</div>
+        <div class="task-check">${done ? '✓' : ''}</div>
+      </div>`;
+    list.appendChild(card);
   }
 
   // Section: Schlafenszeit
