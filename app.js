@@ -10,13 +10,28 @@ const TASKS = [
   { id: 'receipts', label: 'Belege scannen',         img: 'images/tasks/receipts.png', type: 'count', pts: 10, perItem: 2 },
   { id: 'skool_msg',label: 'Skool Nachrichten',      img: 'images/tasks/skool_msg.png',type: 'count', pts: 10, perItem: 1 },
   { id: 'instagram',label: 'Instagram Post',          img: 'images/tasks/instagram.png',type: 'check', pts: 20 },
-  { id: 'course1',  label: 'Kurs 2–4 Jahre planen',  icon: '🎓', type: 'check', pts: 15, weekly: true },
-  { id: 'course2',  label: 'Kurs 5–10 Jahre planen', icon: '🎓', type: 'check', pts: 15, weekly: true },
-  { id: 'course3',  label: 'Kurs 11–14 Jahre planen',icon: '🎓', type: 'check', pts: 15, weekly: true },
-  { id: 'skool_up', label: 'Skool hochladen',         icon: '⬆️', type: 'check', pts: 10, weekly: true },
+  { id: 'course1',  label: 'Kurs 2–4 Jahre planen',  img: 'images/tasks/course1.png',  type: 'check', pts: 15, weekly: true },
+  { id: 'course2',  label: 'Kurs 5–10 Jahre planen', img: 'images/tasks/course2.png',  type: 'check', pts: 15, weekly: true },
+  { id: 'course3',  label: 'Kurs 11–14 Jahre planen',img: 'images/tasks/course3.png',  type: 'check', pts: 15, weekly: true },
+  { id: 'skool_up', label: 'Skool hochladen',         img: 'images/tasks/skool_up.png', type: 'check', pts: 10, weekly: true },
 ];
 
 const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', img: 'images/tasks/sleep.png', type: 'sleep', pts: 0 };
+
+// Monatsaufgaben: am 1. und 13. des Monats
+const MONTHLY_TASKS = [
+  { id: 'monthly_1',  label: 'Gehälter bezahlen & Geld anweisen', icon: '💰', type: 'check', pts: 30, day: 1  },
+  { id: 'monthly_13', label: 'Geld anweisen & Vorsteuer fertig',   icon: '📊', type: 'check', pts: 30, day: 13 },
+];
+
+function getMonthlyTasksForToday() {
+  const dayOfMonth = new Date().getDate();
+  // Zeige die Aufgabe vom 1. die ersten 3 Tage, vom 13. am 13.–15.
+  return MONTHLY_TASKS.filter(t =>
+    (t.day === 1  && dayOfMonth >= 1  && dayOfMonth <= 3) ||
+    (t.day === 13 && dayOfMonth >= 13 && dayOfMonth <= 15)
+  );
+}
 const SLEEP_OPTIONS = [
   { val: 22, label: '🌙 22 Uhr',           pts: 60 },
   { val: 23, label: '🌙 23 Uhr',           pts: 40 },
@@ -369,6 +384,34 @@ function renderTasks() {
         <div class="task-check">${done ? '✓' : ''}</div>
       </div>`;
     list.appendChild(card);
+  }
+
+  // Section: Monatsaufgaben (nur wenn relevant)
+  const monthlyToday = getMonthlyTasksForToday();
+  if (monthlyToday.length > 0) {
+    const mt = document.createElement('div');
+    mt.className = 'section-title';
+    mt.innerHTML = '📅 Monatsaufgaben <span style="color:var(--accent2);font-size:11px;font-weight:700;margin-left:6px">AKTUELL</span>';
+    list.appendChild(mt);
+
+    for (const t of monthlyToday) {
+      const done = day.tasks[t.id];
+      const card = document.createElement('div');
+      card.className = 'task-card' + (done ? ' done' : '');
+      card.style.borderLeft = '4px solid var(--accent2)';
+      card.onclick = () => done ? null : openModal(t);
+      card.innerHTML = `
+        <div class="task-icon" style="background:rgba(255,101,132,0.15)">${t.icon}</div>
+        <div class="task-info">
+          <div class="task-label">${t.label}</div>
+          <div class="task-sub">${done ? '✓ Erledigt' : '⚡ Monatliche Aufgabe – bitte erledigen!'}</div>
+        </div>
+        <div class="task-right">
+          <div class="task-pts" style="color:var(--accent2)">+${t.pts} Pkt</div>
+          <div class="task-check">${done ? '✓' : ''}</div>
+        </div>`;
+      list.appendChild(card);
+    }
   }
 
   // Section: Schlafenszeit

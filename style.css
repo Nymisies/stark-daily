@@ -177,6 +177,8 @@ body {
   font-weight: 700;
 }
 .reward-chip .reward-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.reward-img { width: 36px; height: 36px; object-fit: cover; border-radius: 8px; display: block; margin: 0 auto 4px; opacity: 0.4; transition: opacity 0.3s; }
+.reward-chip.unlocked .reward-img { opacity: 1; }
 
 /* SECTION */
 .section-title {
