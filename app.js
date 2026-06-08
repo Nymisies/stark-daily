@@ -40,8 +40,8 @@ const SLEEP_OPTIONS = [
 ];
 
 const BONUS_TASKS = [
-  { id: 'walk',  label: 'Spazieren gehen', icon: '🚶', pts: 15 },
-  { id: 'dance', label: 'Tanzen',           icon: '💃', pts: 20 },
+  { id: 'walk',  label: 'Spazieren gehen', img: 'images/tasks/walk.png',  pts: 15 },
+  { id: 'dance', label: 'Tanzen',           img: 'images/tasks/dance.png', pts: 20 },
 ];
 
 const AVATAR_LEVELS = [
@@ -458,13 +458,16 @@ function renderTasks() {
     const card = document.createElement('div');
     card.className = 'bonus-card' + (done ? ' done' : '');
     card.onclick = () => done ? null : toggleBonus(b.id);
+    const bonusIcon = b.img
+      ? `<img src="${b.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
+      : `<div class="task-icon">${b.icon}</div>`;
     card.innerHTML = `
-      <div class="task-icon">${b.icon}</div>
+      ${bonusIcon}
       <div class="task-info">
         <div class="bonus-label">${b.label}</div>
         <div class="bonus-pts">+${b.pts} Bonuspunkte</div>
       </div>
-      <div class="task-check ${done ? 'task-card done' : ''}" style="width:28px;height:28px;border-radius:50%;border:2px solid ${done ? 'var(--green)' : 'var(--muted)'};display:flex;align-items:center;justify-content:center;background:${done ? 'var(--green)' : 'transparent'};color:white">${done ? '✓' : ''}</div>`;
+      <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${done ? 'var(--green)' : 'var(--muted)'};display:flex;align-items:center;justify-content:center;background:${done ? 'var(--green)' : 'transparent'};color:white;flex-shrink:0">${done ? '✓' : ''}</div>`;
     list.appendChild(card);
   }
 }
@@ -584,6 +587,27 @@ function switchView(id) {
   document.getElementById('view-' + id).classList.add('active');
   document.getElementById('nav-' + id).classList.add('active');
 }
+
+// ── TAGESRESET ───────────────────────────────────────────────────────────────
+
+function checkDayChange() {
+  const currentKey = todayKey();
+  if (state.today !== currentKey) {
+    // Neuer Tag! Streak prüfen bevor wir wechseln
+    updateStreak();
+    ensureToday();
+    renderAll();
+    showToast('🌅 Neuer Tag – frisch durchstarten!');
+  }
+}
+
+// Jede Minute prüfen ob Mitternacht überschritten wurde
+setInterval(checkDayChange, 60 * 1000);
+
+// Auch beim Zurückkehren zur App (Tab/App wieder in den Vordergrund)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) checkDayChange();
+});
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 
