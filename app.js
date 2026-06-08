@@ -3,27 +3,28 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 
 const TASKS = [
-  { id: 'members',  label: 'Mitglieder einpflegen', img: 'images/tasks/members.png',  type: 'count', pts: 10, perItem: 2 },
-  { id: 'invoices', label: 'Rechnungen schreiben',  img: 'images/tasks/invoices.png', type: 'count', pts: 10, perItem: 5 },
-  { id: 'mails',    label: 'Mails beantworten',     img: 'images/tasks/mails.png',    type: 'count', pts: 10, perItem: 1 },
-  { id: 'post',     label: 'Post & Briefe',          img: 'images/tasks/post.png',     type: 'count', pts: 10, perItem: 2 },
-  { id: 'receipts', label: 'Belege scannen',         img: 'images/tasks/receipts.png', type: 'count', pts: 10, perItem: 2 },
-  { id: 'skool_msg',label: 'Skool Nachrichten',      img: 'images/tasks/skool_msg.png',type: 'count', pts: 10, perItem: 1 },
-  { id: 'instagram',label: 'Instagram Post',          img: 'images/tasks/instagram.png',type: 'check', pts: 20 },
-  { id: 'course1',  label: 'Kurs 2–4 Jahre planen',  img: 'images/tasks/course1.png',  type: 'check', pts: 15, weekly: true },
-  { id: 'course2',  label: 'Kurs 5–10 Jahre planen', img: 'images/tasks/course2.png',  type: 'check', pts: 15, weekly: true },
-  { id: 'course3',  label: 'Kurs 11–14 Jahre planen',img: 'images/tasks/course3.png',  type: 'check', pts: 15, weekly: true },
-  { id: 'skool_up', label: 'Skool hochladen',         img: 'images/tasks/skool_up.png', type: 'check', pts: 10, weekly: true },
+  { id: 'members',    label: 'Mitglieder einpflegen',  img: 'images/tasks/members.png',    type: 'count', pts: 10, perItem: 2 },
+  { id: 'invoices',   label: 'Rechnungen schreiben',   img: 'images/tasks/invoices.png',   type: 'count', pts: 10, perItem: 5 },
+  { id: 'mails',      label: 'Mails beantworten',      img: 'images/tasks/mails.png',      type: 'check', pts: 10 },
+  { id: 'post',       label: 'Post & Briefe',           img: 'images/tasks/post.png',       type: 'check', pts: 10 },
+  { id: 'receipts',   label: 'Belege scannen',          img: 'images/tasks/receipts.png',   type: 'check', pts: 10 },
+  { id: 'skool_msg',  label: 'Skool Nachrichten',       img: 'images/tasks/skool_msg.png',  type: 'check', pts: 10 },
+  { id: 'instagram',  label: 'Instagram Post',           img: 'images/tasks/instagram.png',  type: 'check', pts: 20 },
+  { id: 'course1',    label: 'Kurs 2–4 Jahre planen',   img: 'images/tasks/course1.png',    type: 'check', pts: 15, weekly: true },
+  { id: 'course2',    label: 'Kurs 5–10 Jahre planen',  img: 'images/tasks/course2.png',    type: 'check', pts: 15, weekly: true },
+  { id: 'course3',    label: 'Kurs 11–14 Jahre planen', img: 'images/tasks/course3.png',    type: 'check', pts: 15, weekly: true },
+  { id: 'skool_up',   label: 'Skool hochladen',          img: 'images/tasks/skool_up.png',   type: 'check', pts: 10, weekly: true },
+  { id: 'newsletter', label: 'Newsletter schreiben',    img: 'images/tasks/newsletter.png', type: 'check', pts: 20, weekly: true },
 ];
 
 const SLEEP_TASK = { id: 'sleep', label: 'Schlafenszeit', img: 'images/tasks/sleep.png', type: 'sleep', pts: 0 };
 
 // Monatliche Aufgaben — einmal pro Monat zu erledigen
 const MONTHLY_TASKS = [
-  { id: 'gehalt',    label: 'Gehalt zahlen',            icon: '💰', type: 'check', pts: 30, hint: 'Anfang des Monats' },
-  { id: 'geld1',     label: 'Geld anweisen (Anfang)',   icon: '💸', type: 'check', pts: 20, hint: 'Anfang des Monats' },
-  { id: 'geld2',     label: 'Geld anweisen (Mitte)',    icon: '💸', type: 'check', pts: 20, hint: 'Um den 13.' },
-  { id: 'vorsteuer', label: 'Vorsteuer fertig machen',  icon: '📊', type: 'check', pts: 30, hint: 'Um den 13.' },
+  { id: 'gehalt',    label: 'Gehalt zahlen',           img: 'images/tasks/gehalt.png',    type: 'check', pts: 30, hint: 'Anfang des Monats' },
+  { id: 'geld1',     label: 'Geld anweisen (Anfang)',  img: 'images/tasks/geld1.png',     type: 'check', pts: 20, hint: 'Anfang des Monats' },
+  { id: 'geld2',     label: 'Geld anweisen (Mitte)',   img: 'images/tasks/geld2.png',     type: 'check', pts: 20, hint: 'Um den 13.' },
+  { id: 'vorsteuer', label: 'Vorsteuer fertig machen', img: 'images/tasks/vorsteuer.png', type: 'check', pts: 30, hint: 'Um den 13.' },
 ];
 const SLEEP_OPTIONS = [
   { val: 22, label: '🌙 22 Uhr',           pts: 60 },
@@ -160,33 +161,42 @@ let selectedSleep = null;
 
 function openModal(task) {
   modalTask = task;
-  const existing = state.days[state.today].tasks[task.id];
+  const existing = state.days[state.today]?.tasks[task.id];
   modalCount = existing ? (existing.count || 0) : 0;
 
+  // Großes Bild oben im Modal
+  const imgEl = document.getElementById('modal-big-img');
   const iconEl = document.getElementById('modal-icon');
   if (task.img) {
-    iconEl.innerHTML = `<img src="${task.img}" style="width:64px;height:64px;object-fit:cover;border-radius:14px;margin:0 auto;display:block">`;
+    imgEl.src = task.img;
+    imgEl.style.display = 'block';
+    iconEl.style.display = 'none';
   } else {
-    iconEl.textContent = task.icon;
+    imgEl.style.display = 'none';
+    iconEl.style.display = 'block';
+    iconEl.textContent = task.icon || '📋';
   }
+
   document.getElementById('modal-title').textContent = task.label;
   document.getElementById('modal-subtitle').textContent =
-    task.type === 'count'
-      ? 'Wie viele hast du heute erledigt? (0 ist okay wenn du dich darum gekümmert hast)'
-      : 'Hast du das heute gemacht?';
+    task.type === 'count' ? 'Wie viele hast du heute erledigt? (0 ist okay)'
+    : task.type === 'sleep' ? 'Wann gehst du heute schlafen?'
+    : 'Hast du das heute gemacht?';
+
   document.getElementById('modal-count-row').style.display = task.type === 'count' ? 'flex' : 'none';
   document.getElementById('modal-check-row').style.display = task.type === 'check' ? 'block' : 'none';
   document.getElementById('modal-sleep-row').style.display = task.type === 'sleep' ? 'block' : 'none';
   selectedSleep = null;
   document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected'));
   updateCountDisplay();
-
   document.getElementById('modal').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   modalTask = null;
+  monthlyModalTask = null;
+  bonusModalTask = null;
 }
 
 function updateCountDisplay() {
@@ -230,18 +240,65 @@ function confirmModal() {
   showToast('✓ ' + modalTask.label + ' abgehakt!');
 }
 
+// ── MONTHLY MODAL ─────────────────────────────────────────────────────────────
+
+let monthlyModalTask = null;
+
+function openMonthlyModal(task) {
+  monthlyModalTask = task;
+  const imgEl = document.getElementById('modal-big-img');
+  const iconEl = document.getElementById('modal-icon');
+  if (task.img) {
+    imgEl.src = task.img; imgEl.style.display = 'block'; iconEl.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none'; iconEl.style.display = 'block'; iconEl.textContent = task.icon || '📅';
+  }
+  document.getElementById('modal-title').textContent = task.label;
+  document.getElementById('modal-subtitle').textContent = '📅 ' + task.hint + ' — erledigt?';
+  document.getElementById('modal-count-row').style.display = 'none';
+  document.getElementById('modal-check-row').style.display = 'block';
+  document.getElementById('modal-sleep-row').style.display = 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function confirmMonthlyModal() {
+  if (!monthlyModalTask) return;
+  state.months[state.month].tasks[monthlyModalTask.id] = { done: true };
+  state.totalPts = (state.totalPts || 0) + monthlyModalTask.pts;
+  updateStreak(); saveState(); closeModal(); renderAll();
+  showToast('✓ ' + monthlyModalTask.label + ' erledigt!');
+  monthlyModalTask = null;
+}
+
 // ── BONUS ────────────────────────────────────────────────────────────────────
 
-function toggleBonus(id) {
+let bonusModalTask = null;
+
+function openBonusModal(task) {
+  bonusModalTask = task;
+  const imgEl = document.getElementById('modal-big-img');
+  const iconEl = document.getElementById('modal-icon');
+  if (task.img) {
+    imgEl.src = task.img; imgEl.style.display = 'block'; iconEl.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none'; iconEl.style.display = 'block'; iconEl.textContent = task.icon || '⭐';
+  }
+  document.getElementById('modal-title').textContent = task.label;
+  document.getElementById('modal-subtitle').textContent = '🌟 +' + task.pts + ' Bonuspunkte — gemacht?';
+  document.getElementById('modal-count-row').style.display = 'none';
+  document.getElementById('modal-check-row').style.display = 'block';
+  document.getElementById('modal-sleep-row').style.display = 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function confirmBonusModal() {
+  if (!bonusModalTask) return;
   const day = state.days[state.today];
-  if (day.bonus[id]) return; // already done, no double-count
-  const task = BONUS_TASKS.find(b => b.id === id);
-  day.bonus[id] = true;
-  state.totalPts = (state.totalPts || 0) + task.pts;
-  updateStreak();
-  saveState();
-  renderAll();
-  showToast('🌟 Bonus: +' + task.pts + ' Punkte!');
+  day.bonus[bonusModalTask.id] = true;
+  state.totalPts = (state.totalPts || 0) + bonusModalTask.pts;
+  updateStreak(); saveState(); closeModal(); renderAll();
+  showToast('🌟 Bonus: +' + bonusModalTask.pts + ' Punkte!');
+  bonusModalTask = null;
 }
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
@@ -400,18 +457,12 @@ function renderTasks() {
     const done = state.months[state.month].tasks[t.id];
     const card = document.createElement('div');
     card.className = 'task-card' + (done ? ' done' : '');
-    card.onclick = () => {
-      if (done) return;
-      // Monatsaufgaben direkt abhaken (kein Modal nötig)
-      state.months[state.month].tasks[t.id] = { done: true };
-      state.totalPts = (state.totalPts || 0) + t.pts;
-      updateStreak();
-      saveState();
-      renderAll();
-      showToast('✓ ' + t.label + ' erledigt!');
-    };
+    card.onclick = () => { if (!done) openMonthlyModal(t); };
+    const monthIconHtml = t.img
+      ? `<img src="${t.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
+      : `<div class="task-icon" style="background:rgba(255,101,132,0.1)">${t.icon||'📅'}</div>`;
     card.innerHTML = `
-      <div class="task-icon" style="background:rgba(255,101,132,0.1);font-size:24px">${t.icon}</div>
+      ${monthIconHtml}
       <div class="task-info">
         <div class="task-label">${t.label}</div>
         <div class="task-sub">${done ? '✓ Diesen Monat erledigt' : '📅 ' + t.hint}</div>
@@ -466,7 +517,7 @@ function renderTasks() {
     const done = day.bonus[b.id];
     const card = document.createElement('div');
     card.className = 'bonus-card' + (done ? ' done' : '');
-    card.onclick = () => done ? null : toggleBonus(b.id);
+    card.onclick = () => done ? null : openBonusModal(b);
     const bonusIcon = b.img
       ? `<img src="${b.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
       : `<div class="task-icon">${b.icon}</div>`;
@@ -511,42 +562,53 @@ function renderStats() {
   document.getElementById('stat-sleep24').textContent   = sleep24;
   document.getElementById('stat-sleep99').textContent   = sleep99;
 
-  // Balken
+  // Tägliche Balken
+  function makeBar(container, label, value, max, unit) {
+    const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+    container.innerHTML += `
+      <div class="week-bar-row">
+        <div class="week-bar-label"><span>${label}</span><span>${value} ${unit}</span></div>
+        <div class="week-bar-bg"><div class="week-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }
+
   const barContainer = document.getElementById('week-bars');
   barContainer.innerHTML = '';
-  const taskIds    = ['members', 'invoices', 'mails', 'receipts', 'instagram', 'skool_msg'];
-  const taskLabels = {
-    members:   '👥 Mitglieder',
-    invoices:  '🧾 Rechnungen',
-    mails:     '📧 Mails',
-    receipts:  '🗂️ Belege',
-    instagram: '📸 Instagram',
-    skool_msg: '💬 Skool'
-  };
-
-  for (const id of taskIds) {
-    const t = TASKS.find(x => x.id === id);
-    if (!t) continue;
+  const dailyIds = ['members','invoices','mails','receipts','instagram','skool_msg'];
+  const dailyLabels = { members:'👥 Mitglieder', invoices:'🧾 Rechnungen', mails:'📧 Mails', receipts:'🗂️ Belege', instagram:'📸 Instagram', skool_msg:'💬 Skool' };
+  const maxDays = days.length || 1;
+  for (const id of dailyIds) {
+    const t = TASKS.find(x => x.id === id); if (!t) continue;
     let total = 0;
     for (const [, day] of days) {
       if (t.type === 'count') total += (day.tasks[id]?.count || 0);
       else if (day.tasks[id]?.done) total += 1;
     }
-    if (total === 0 && days.length === 0) continue;
-    const maxDays = days.length || 1;
-    const maxVal = t.type === 'count' ? Math.max(total, maxDays) : maxDays;
-    const pct = Math.min(100, Math.round((total / maxVal) * 100));
-    const unit = t.type === 'count' ? 'Stk.' : 'Tage';
-    barContainer.innerHTML += `
-      <div class="week-bar-row">
-        <div class="week-bar-label">
-          <span>${taskLabels[id]}</span>
-          <span>${total} ${unit}</span>
-        </div>
-        <div class="week-bar-bg">
-          <div class="week-bar-fill" style="width:${pct}%"></div>
-        </div>
-      </div>`;
+    makeBar(barContainer, dailyLabels[id], total, t.type === 'count' ? Math.max(total, maxDays) : maxDays, t.type === 'count' ? 'Stk.' : 'Tage');
+  }
+
+  // Wöchentliche Balken
+  const weeklyContainer = document.getElementById('weekly-bars');
+  weeklyContainer.innerHTML = '';
+  const weeks = Object.entries(state.weeks || {});
+  const weeklyIds = ['course1','course2','course3','skool_up','newsletter'];
+  const weeklyLabels = { course1:'🎓 Kurs 2–4', course2:'🎓 Kurs 5–10', course3:'🎓 Kurs 11–14', skool_up:'⬆️ Skool Upload', newsletter:'📰 Newsletter' };
+  for (const id of weeklyIds) {
+    let done = 0;
+    for (const [, wk] of weeks) { if (wk.tasks[id]) done++; }
+    makeBar(weeklyContainer, weeklyLabels[id], done, Math.max(done, 4), 'Wochen');
+  }
+
+  // Monatliche Balken
+  const monthlyContainer = document.getElementById('monthly-bars');
+  monthlyContainer.innerHTML = '';
+  const months = Object.entries(state.months || {});
+  const monthlyIds = ['gehalt','geld1','geld2','vorsteuer'];
+  const monthlyLabels = { gehalt:'💰 Gehalt', geld1:'💸 Geld (Anfang)', geld2:'💸 Geld (Mitte)', vorsteuer:'📊 Vorsteuer' };
+  for (const id of monthlyIds) {
+    let done = 0;
+    for (const [, mo] of months) { if (mo.tasks[id]) done++; }
+    makeBar(monthlyContainer, monthlyLabels[id], done, Math.max(done, 3), 'Monate');
   }
 }
 
@@ -628,7 +690,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-minus').onclick = () => { if (modalCount > 0) { modalCount--; updateCountDisplay(); } };
   document.getElementById('btn-plus').onclick = () => { modalCount++; updateCountDisplay(); };
   document.getElementById('btn-cancel').onclick = closeModal;
-  document.getElementById('btn-confirm').onclick = confirmModal;
+  document.getElementById('btn-confirm').onclick = () => {
+    if (monthlyModalTask) confirmMonthlyModal();
+    else if (bonusModalTask) confirmBonusModal();
+    else confirmModal();
+  };
 
   renderAll();
   switchView('today');
