@@ -54,19 +54,30 @@ const REWARDS = [
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 
+// Lokale Datumsformatierung (keine UTC-Verschiebung)
+function localDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function todayKey() {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return localDateStr(new Date());
 }
 
 function weekKey() {
   const d = new Date();
-  const day = d.getDay() || 7;
-  d.setDate(d.getDate() - day + 1);
-  return d.toISOString().slice(0, 10);
+  const dow = d.getDay(); // 0=So, 1=Mo, ..., 6=Sa
+  // Zurück zum letzten Montag (oder heute wenn Montag)
+  const diff = (dow === 0) ? 6 : dow - 1;
+  d.setDate(d.getDate() - diff);
+  return localDateStr(d);
 }
 
 function monthKey() {
-  return new Date().toISOString().slice(0, 7); // YYYY-MM
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function loadState() {
