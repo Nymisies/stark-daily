@@ -382,6 +382,20 @@ function renderProgress() {
   chips.forEach((chip, i) => {
     chip.classList.toggle('unlocked', pct >= REWARDS[i].pct);
   });
+
+  // Großes Fortschrittsbild
+  const rewardImg = document.getElementById('reward-img');
+  let imgSrc = '';
+  if (pct >= 100) imgSrc = 'images/rewards/erfolg3.png';
+  else if (pct >= 60) imgSrc = 'images/rewards/erfolg2.png';
+  else if (pct >= 30) imgSrc = 'images/rewards/erfolg1.png';
+
+  if (imgSrc) {
+    if (rewardImg.src !== imgSrc) rewardImg.src = imgSrc;
+    rewardImg.style.display = 'block';
+  } else {
+    rewardImg.style.display = 'none';
+  }
 }
 
 function renderTasks() {
