@@ -675,9 +675,15 @@ function switchView(id) {
 function checkDayChange() {
   const currentKey = todayKey();
   if (state.today !== currentKey) {
-    // Neuer Tag! Streak prüfen bevor wir wechseln
+    // Schlafenszeit nachholen falls nicht eingetragen
+    const prevDay = state.days[state.today];
+    if (prevDay && !prevDay.tasks.sleep) {
+      prevDay.tasks.sleep = { done: true, sleepVal: 99, sleepPts: 0 };
+      // Keine Punkte — 0 Punkte für "Nach Mitternacht"
+    }
     updateStreak();
     ensureToday();
+    saveState();
     renderAll();
     showToast('🌅 Neuer Tag – frisch durchstarten!');
   }
