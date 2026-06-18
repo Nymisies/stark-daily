@@ -39,11 +39,11 @@ const BONUS_TASKS = [
 ];
 
 const AVATAR_LEVELS = [
-  { min: 0,    img: 'images/avatars/lehrling.png',  rank: 'Stufe 1', name: 'Der Lehrling',   color: '#aaa' },
-  { min: 200,  img: 'images/avatars/arbeiter.png',  rank: 'Stufe 2', name: 'Der Arbeiter',   color: '#cd7f32' },
-  { min: 500,  img: 'images/avatars/profi.png',     rank: 'Stufe 3', name: 'Der Profi',      color: '#a8a9ad' },
-  { min: 1000, img: 'images/avatars/held.png',      rank: 'Stufe 4', name: 'Der Held',       color: '#ffd700' },
-  { min: 2000, img: 'images/avatars/superheld.png', rank: 'Stufe 5', name: 'Der Superheld',  color: '#6c63ff' },
+  { min: 0,    img: 'images/avatars/avatar1.png', rank: 'Stufe 1', name: 'Auszubildende', color: '#aaa' },
+  { min: 200,  img: 'images/avatars/avatar2.png', rank: 'Stufe 2', name: 'Lehrling',      color: '#cd7f32' },
+  { min: 500,  img: 'images/avatars/avatar3.png', rank: 'Stufe 3', name: 'Profi',         color: '#a8a9ad' },
+  { min: 1000, img: 'images/avatars/avatar4.png', rank: 'Stufe 4', name: 'Heldin',        color: '#ffd700' },
+  { min: 2000, img: 'images/avatars/avatar5.png', rank: 'Stufe 5', name: 'Superheldin',   color: '#6c63ff' },
 ];
 
 const REWARDS = [
@@ -109,14 +109,34 @@ let state = loadState();
 if (!state.totalPts) state.totalPts = 0;
 if (!state.streak) state.streak = 0;
 if (!state.lastStreakDate) state.lastStreakDate = null;
+if (state.selectedAvatarIdx === undefined) state.selectedAvatarIdx = null; // null = auto (höchste freigeschaltete)
 ensureToday();
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 
+function getHighestUnlockedIdx(pts) {
+  let idx = 0;
+  for (let i = 0; i < AVATAR_LEVELS.length; i++) {
+    if (pts >= AVATAR_LEVELS[i].min) idx = i;
+  }
+  return idx;
+}
+
 function getAvatar(pts) {
-  let level = AVATAR_LEVELS[0];
-  for (const l of AVATAR_LEVELS) { if (pts >= l.min) level = l; }
-  return level;
+  // Wenn ein Avatar manuell gewählt wurde, diesen nehmen
+  if (state.selectedAvatarIdx !== null && pts >= AVATAR_LEVELS[state.selectedAvatarIdx].min) {
+    return AVATAR_LEVELS[state.selectedAvatarIdx];
+  }
+  return AVATAR_LEVELS[getHighestUnlockedIdx(pts)];
+}
+
+function selectAvatar(idx) {
+  const pts = state.totalPts || 0;
+  if (pts < AVATAR_LEVELS[idx].min) return; // gesperrt
+  state.selectedAvatarIdx = idx;
+  saveState();
+  renderAll();
+  showToast('✨ Avatar gewechselt: ' + AVATAR_LEVELS[idx].name);
 }
 
 function getNextLevel(pts) {
@@ -642,14 +662,15 @@ function renderAvatarPage() {
   const av = getAvatar(pts);
   const next = getNextLevel(pts);
 
-  document.getElementById('av-emoji').innerHTML =
-    `<img src="${av.img}" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid var(--accent);box-shadow:0 0 30px rgba(108,99,255,0.4)">`;
+  // Großes Bild oben — volle Breite
+  document.getElementById('av-big-img').src = av.img;
   document.getElementById('av-rank').textContent = av.rank;
   document.getElementById('av-name').textContent = av.name;
   document.getElementById('av-pts-label').textContent = pts + ' Gesamtpunkte';
 
   if (next) {
-    const pct = Math.round(((pts - av.min) / (next.min - av.min)) * 100);
+    const highestAv = AVATAR_LEVELS[getHighestUnlockedIdx(pts)];
+    const pct = Math.round(((pts - highestAv.min) / (next.min - highestAv.min)) * 100);
     document.getElementById('xp-bar').style.width = pct + '%';
     document.getElementById('xp-label').textContent = `Nächste Stufe: ${next.name} (${next.min - pts} Pkt. fehlen)`;
   } else {
@@ -657,20 +678,24 @@ function renderAvatarPage() {
     document.getElementById('xp-label').textContent = 'Maximale Stufe erreicht! 🏆';
   }
 
+  // Auswählbare Avatar-Kacheln
   const rankList = document.getElementById('rank-list');
   rankList.innerHTML = '';
-  for (const l of AVATAR_LEVELS) {
-    const isCurrent = av.min === l.min;
+  for (let i = 0; i < AVATAR_LEVELS.length; i++) {
+    const l = AVATAR_LEVELS[i];
     const isUnlocked = pts >= l.min;
+    const isSelected = av.img === l.img;
     const el = document.createElement('div');
-    el.className = 'rank-item' + (isCurrent ? ' current' : '') + (!isUnlocked ? ' locked' : '');
+    el.className = 'rank-item' + (isSelected ? ' current' : '') + (!isUnlocked ? ' locked' : '');
+    if (isUnlocked) el.onclick = () => selectAvatar(i);
+    el.style.cursor = isUnlocked ? 'pointer' : 'default';
     el.innerHTML = `
-      <img src="${l.img}" style="width:44px;height:44px;object-fit:cover;border-radius:50%;${!isUnlocked ? 'filter:grayscale(1)' : ''}">
+      <img src="${l.img}" style="width:56px;height:56px;object-fit:contain;border-radius:12px;${!isUnlocked ? 'filter:grayscale(1);opacity:0.4' : ''}${isSelected ? ';outline:3px solid var(--accent)' : ''}">
       <div class="rank-info">
         <div class="rank-name">${l.name}</div>
-        <div class="rank-req">${l.min} Punkte</div>
+        <div class="rank-req">${l.min > 0 ? l.min + ' Punkte' : 'Startavatar'}</div>
       </div>
-      ${isCurrent ? '<span class="rank-badge current">AKTUELL</span>' : isUnlocked ? '<span class="rank-badge done">✓</span>' : '🔒'}`;
+      ${isSelected ? '<span class="rank-badge current">AKTIV</span>' : isUnlocked ? '<span class="rank-badge done">Wählen</span>' : '🔒'}`;
     rankList.appendChild(el);
   }
 }

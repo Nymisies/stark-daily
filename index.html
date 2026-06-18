@@ -139,18 +139,22 @@
 
 <!-- VIEW: AVATAR -->
 <div class="view" id="view-avatar">
-  <div class="avatar-page-card">
-    <div class="avatar-big" id="av-emoji">🧑‍🔧</div>
-    <div class="avatar-rank-big" id="av-rank">Stufe 1</div>
-    <div class="avatar-name-big" id="av-name">Der Lehrling</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5)" id="av-pts-label">0 Gesamtpunkte</div>
-    <div class="xp-bar-bg">
-      <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+
+  <!-- Großes Avatar-Bild oben, volle Breite -->
+  <div class="avatar-hero">
+    <img id="av-big-img" src="images/avatars/avatar1.png" alt="" class="avatar-hero-img">
+    <div class="avatar-hero-info">
+      <div class="avatar-rank-big" id="av-rank">Stufe 1</div>
+      <div class="avatar-name-big" id="av-name">Auszubildende</div>
+      <div class="avatar-pts-label" id="av-pts-label">0 Gesamtpunkte</div>
+      <div class="xp-bar-bg" style="margin-top:10px">
+        <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+      </div>
+      <div class="xp-label" id="xp-label">Nächste Stufe: 200 Punkte</div>
     </div>
-    <div class="xp-label" id="xp-label">Nächste Stufe: 200 Punkte</div>
   </div>
 
-  <div class="section-title">Alle Ränge</div>
+  <div class="section-title">Avatare auswählen</div>
   <div class="rank-list" id="rank-list"></div>
   <img src="images/nav/avatar.png" class="page-footer-img" alt="">
 </div>
