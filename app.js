@@ -10,6 +10,8 @@ const TASKS = [
   { id: 'receipts',   label: 'Belege scannen',          img: 'images/tasks/receipts.png',   type: 'check', pts: 10 },
   { id: 'skool_msg',  label: 'Skool Nachrichten',       img: 'images/tasks/skool_msg.png',  type: 'check', pts: 10 },
   { id: 'instagram',  label: 'Instagram Post',           img: 'images/tasks/instagram.png',  type: 'check', pts: 20 },
+  { id: 'staff',      label: 'Freestyle Staff',          img: 'images/tasks/staff.png',      type: 'minutes', pts: 0, perMin: 1 },
+  { id: 'lesen',      label: 'Lesen',                    img: 'images/tasks/lesen.png',      type: 'minutes', pts: 0, perMin: 1 },
   { id: 'course1',    label: 'Kurs 2–4 Jahre planen',   img: 'images/tasks/course1.png',    type: 'check', pts: 15, weekly: true },
   { id: 'course2',    label: 'Kurs 5–10 Jahre planen',  img: 'images/tasks/course2.png',    type: 'check', pts: 15, weekly: true },
   { id: 'course3',    label: 'Kurs 11–14 Jahre planen', img: 'images/tasks/course3.png',    type: 'check', pts: 15, weekly: true },
@@ -155,6 +157,7 @@ function calcDayPts() {
     if (done) {
       earned += t.pts;
       if (t.type === 'count' && done.count) earned += done.count * t.perItem;
+      if (t.type === 'minutes' && done.minutes) earned += done.minutes * (t.perMin || 1);
     }
   }
   // bonus
@@ -210,13 +213,16 @@ function openModal(task) {
 
   document.getElementById('modal-title').textContent = task.label;
   document.getElementById('modal-subtitle').textContent =
-    task.type === 'count' ? 'Wie viele hast du heute erledigt? (0 ist okay)'
+    task.type === 'count'   ? 'Wie viele hast du heute erledigt? (0 ist okay)'
     : task.type === 'sleep' ? 'Wann gehst du heute schlafen?'
+    : task.type === 'minutes' ? 'Wie viele Minuten hast du heute gemacht?'
     : 'Hast du das heute gemacht?';
 
-  document.getElementById('modal-count-row').style.display = task.type === 'count' ? 'flex' : 'none';
+  document.getElementById('modal-count-row').style.display = (task.type === 'count' || task.type === 'minutes') ? 'flex' : 'none';
   document.getElementById('modal-check-row').style.display = task.type === 'check' ? 'block' : 'none';
   document.getElementById('modal-sleep-row').style.display = task.type === 'sleep' ? 'block' : 'none';
+  // Minuten: max 99
+  document.getElementById('modal-count-row').dataset.maxVal = task.type === 'minutes' ? '99' : '9999';
   selectedSleep = null;
   document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected'));
   updateCountDisplay();
@@ -251,6 +257,10 @@ function confirmModal() {
 
   let delta = modalTask.pts;
   if (modalTask.type === 'count') delta += modalCount * modalTask.perItem;
+  if (modalTask.type === 'minutes') {
+    delta = Math.round(modalCount * (modalTask.perMin || 0.5));
+    day.tasks[modalTask.id].minutes = modalCount;
+  }
   if (modalTask.type === 'sleep') {
     const opt = SLEEP_OPTIONS.find(o => o.val === selectedSleep);
     delta = opt ? opt.pts : 0;
@@ -444,8 +454,8 @@ function renderTasks() {
     card.onclick = () => done ? null : openModal(t);
 
     let sub = done
-      ? (t.type === 'count' ? `✓ Erledigt · ${done.count} Stk.` : '✓ Erledigt')
-      : (t.type === 'count' ? 'Tippe zum Abhaken + Anzahl eingeben' : 'Tippe zum Abhaken');
+      ? (t.type === 'count' ? `✓ Erledigt · ${done.count} Stk.` : t.type === 'minutes' ? `✓ ${done.minutes} Min.` : '✓ Erledigt')
+      : (t.type === 'count' ? 'Tippe zum Abhaken + Anzahl eingeben' : t.type === 'minutes' ? 'Tippe zum Eintragen (1–99 Min.)' : 'Tippe zum Abhaken');
 
     const iconHtml = t.img
       ? `<img src="${t.img}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex-shrink:0">`
@@ -582,12 +592,15 @@ function renderStats() {
   document.getElementById('stats-period-label').textContent = getPeriodLabel(currentPeriod);
 
   let totalMembers = 0, totalInvoices = 0, totalMails = 0, totalInstagram = 0, totalReceipts = 0;
+  let totalStaff = 0, totalLesen = 0;
   let sleep22 = 0, sleep23 = 0, sleep24 = 0, sleep99 = 0;
   for (const [, day] of days) {
     totalMembers  += (day.tasks.members?.count  || 0);
     totalInvoices += (day.tasks.invoices?.count || 0);
     totalMails    += (day.tasks.mails?.count    || 0);
     totalReceipts += (day.tasks.receipts?.count || 0);
+    totalStaff    += (day.tasks.staff?.minutes  || 0);
+    totalLesen    += (day.tasks.lesen?.minutes  || 0);
     if (day.tasks.instagram?.done) totalInstagram++;
     const sv = day.tasks.sleep?.sleepVal;
     if (sv === 22) sleep22++;
@@ -602,6 +615,8 @@ function renderStats() {
   document.getElementById('stat-streak').textContent    = state.streak || 0;
   document.getElementById('stat-instagram').textContent = totalInstagram;
   document.getElementById('stat-receipts').textContent  = totalReceipts;
+  document.getElementById('stat-staff').textContent     = totalStaff + ' Min';
+  document.getElementById('stat-lesen').textContent     = totalLesen + ' Min';
   document.getElementById('stat-sleep22').textContent   = sleep22;
   document.getElementById('stat-sleep23').textContent   = sleep23;
   document.getElementById('stat-sleep24').textContent   = sleep24;
@@ -619,17 +634,20 @@ function renderStats() {
 
   const barContainer = document.getElementById('week-bars');
   barContainer.innerHTML = '';
-  const dailyIds = ['members','invoices','mails','receipts','instagram','skool_msg'];
-  const dailyLabels = { members:'👥 Mitglieder', invoices:'🧾 Rechnungen', mails:'📧 Mails', receipts:'🗂️ Belege', instagram:'📸 Instagram', skool_msg:'💬 Skool' };
+  const dailyIds = ['members','invoices','mails','receipts','instagram','skool_msg','staff','lesen'];
+  const dailyLabels = { members:'👥 Mitglieder', invoices:'🧾 Rechnungen', mails:'📧 Mails', receipts:'🗂️ Belege', instagram:'📸 Instagram', skool_msg:'💬 Skool', staff:'🥢 Freestyle Staff', lesen:'📖 Lesen' };
   const maxDays = days.length || 1;
   for (const id of dailyIds) {
     const t = TASKS.find(x => x.id === id); if (!t) continue;
     let total = 0;
     for (const [, day] of days) {
       if (t.type === 'count') total += (day.tasks[id]?.count || 0);
+      else if (t.type === 'minutes') total += (day.tasks[id]?.minutes || 0);
       else if (day.tasks[id]?.done) total += 1;
     }
-    makeBar(barContainer, dailyLabels[id], total, t.type === 'count' ? Math.max(total, maxDays) : maxDays, t.type === 'count' ? 'Stk.' : 'Tage');
+    const unit = t.type === 'count' ? 'Stk.' : t.type === 'minutes' ? 'Min.' : 'Tage';
+    const maxVal = t.type === 'count' ? Math.max(total, maxDays) : t.type === 'minutes' ? Math.max(total, 99) : maxDays;
+    makeBar(barContainer, dailyLabels[id], total, maxVal, unit);
   }
 
   // Wöchentliche Balken
@@ -744,7 +762,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === document.getElementById('modal')) closeModal();
   });
   document.getElementById('btn-minus').onclick = () => { if (modalCount > 0) { modalCount--; updateCountDisplay(); } };
-  document.getElementById('btn-plus').onclick = () => { modalCount++; updateCountDisplay(); };
+  document.getElementById('btn-plus').onclick = () => {
+    const maxVal = parseInt(document.getElementById('modal-count-row').dataset.maxVal || '9999');
+    if (modalCount < maxVal) { modalCount++; updateCountDisplay(); }
+  };
   document.getElementById('btn-cancel').onclick = closeModal;
   document.getElementById('btn-confirm').onclick = () => {
     if (monthlyModalTask) confirmMonthlyModal();
