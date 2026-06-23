@@ -195,8 +195,8 @@ let selectedSleep = null;
 
 function openModal(task) {
   modalTask = task;
-  const existing = state.days[state.today]?.tasks[task.id];
-  modalCount = existing ? (existing.count || 0) : 0;
+  // Für additive Typen (count/minutes) immer mit 0 starten — wird addiert
+  modalCount = 0;
 
   // Großes Bild oben im Modal
   const imgEl = document.getElementById('modal-big-img');
@@ -212,10 +212,13 @@ function openModal(task) {
   }
 
   document.getElementById('modal-title').textContent = task.label;
+  const existing = state.days[state.today]?.tasks[task.id];
+  const alreadyCount = existing?.count || 0;
+  const alreadyMins  = existing?.minutes || 0;
   document.getElementById('modal-subtitle').textContent =
-    task.type === 'count'   ? 'Wie viele hast du heute erledigt? (0 ist okay)'
+    task.type === 'count'   ? (alreadyCount > 0 ? `Bereits heute: ${alreadyCount} Stk. — wie viele kommen noch dazu?` : 'Wie viele hast du heute erledigt?')
     : task.type === 'sleep' ? 'Wann gehst du heute schlafen?'
-    : task.type === 'minutes' ? 'Wie viele Minuten hast du heute gemacht?'
+    : task.type === 'minutes' ? (alreadyMins > 0 ? `Bereits heute: ${alreadyMins} Min. — wie viele kommen noch dazu?` : 'Wie viele Minuten hast du heute gemacht?')
     : 'Hast du das heute gemacht?';
 
   document.getElementById('modal-count-row').style.display = (task.type === 'count' || task.type === 'minutes') ? 'flex' : 'none';
@@ -253,13 +256,19 @@ function confirmModal() {
     return;
   }
   const day = state.days[state.today];
-  day.tasks[modalTask.id] = { done: true, count: modalCount };
+  const prev = day.tasks[modalTask.id] || {};
 
-  let delta = modalTask.pts;
-  if (modalTask.type === 'count') delta += modalCount * modalTask.perItem;
-  if (modalTask.type === 'minutes') {
-    delta = Math.round(modalCount * (modalTask.perMin || 0.5));
-    day.tasks[modalTask.id].minutes = modalCount;
+  let delta = prev.done ? 0 : modalTask.pts; // Basis-Punkte nur beim ersten Mal
+  if (modalTask.type === 'count') {
+    const newCount = (prev.count || 0) + modalCount;
+    day.tasks[modalTask.id] = { done: true, count: newCount };
+    delta += modalCount * modalTask.perItem;
+  } else if (modalTask.type === 'minutes') {
+    const newMins = (prev.minutes || 0) + modalCount;
+    day.tasks[modalTask.id] = { done: true, minutes: newMins, count: newMins };
+    delta = modalCount * (modalTask.perMin || 1);
+  } else {
+    day.tasks[modalTask.id] = { done: true, count: modalCount };
   }
   if (modalTask.type === 'sleep') {
     const opt = SLEEP_OPTIONS.find(o => o.val === selectedSleep);
@@ -365,22 +374,37 @@ function setPeriod(p) {
 function getDaysForPeriod(period) {
   const all = Object.entries(state.days || {}).sort();
   const now = new Date();
-  let cutoff;
+  let cutoffKey;
   if (period === 'week') {
-    cutoff = new Date(now); cutoff.setDate(now.getDate() - 7);
+    // Montag der aktuellen Woche (deutsche Zeitzone = lokale Zeit)
+    const dow = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
+    const diff = (dow === 0) ? 6 : dow - 1;
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - diff);
+    cutoffKey = localDateStr(mon);
   } else if (period === 'month') {
-    cutoff = new Date(now); cutoff.setMonth(now.getMonth() - 1);
+    // 1. des aktuellen Monats
+    cutoffKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   } else {
-    cutoff = new Date(now); cutoff.setFullYear(now.getFullYear() - 1);
+    // 1. Januar des aktuellen Jahres
+    cutoffKey = `${now.getFullYear()}-01-01`;
   }
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
   return all.filter(([k]) => k >= cutoffKey);
 }
 
 function getPeriodLabel(period) {
-  if (period === 'week')  return 'Letzte 7 Tage';
-  if (period === 'month') return 'Letzter Monat';
-  return 'Letztes Jahr';
+  const now = new Date();
+  if (period === 'week') {
+    const dow = now.getDay();
+    const diff = (dow === 0) ? 6 : dow - 1;
+    const mon = new Date(now); mon.setDate(now.getDate() - diff);
+    return `Diese Woche (ab ${mon.getDate()}.${mon.getMonth() + 1}.)`;
+  }
+  if (period === 'month') {
+    const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    return months[now.getMonth()] + ' ' + now.getFullYear();
+  }
+  return 'Jahr ' + now.getFullYear();
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
@@ -450,11 +474,12 @@ function renderTasks() {
   for (const t of TASKS.filter(x => !x.weekly)) {
     const done = day.tasks[t.id];
     const card = document.createElement('div');
+    const isAdditive = t.type === 'count' || t.type === 'minutes';
     card.className = 'task-card' + (done ? ' done' : '');
-    card.onclick = () => done ? null : openModal(t);
+    card.onclick = () => (done && !isAdditive) ? null : openModal(t);
 
     let sub = done
-      ? (t.type === 'count' ? `✓ Erledigt · ${done.count} Stk.` : t.type === 'minutes' ? `✓ ${done.minutes} Min.` : '✓ Erledigt')
+      ? (t.type === 'count' ? `✓ ${done.count} Stk. · + weitere hinzufügen` : t.type === 'minutes' ? `✓ ${done.minutes} Min. · + weitere hinzufügen` : '✓ Erledigt')
       : (t.type === 'count' ? 'Tippe zum Abhaken + Anzahl eingeben' : t.type === 'minutes' ? 'Tippe zum Eintragen (1–99 Min.)' : 'Tippe zum Abhaken');
 
     const iconHtml = t.img
