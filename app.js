@@ -10,7 +10,8 @@ const TASKS = [
   { id: 'receipts',   label: 'Belege scannen',          img: 'images/tasks/receipts.png',   type: 'check', pts: 10 },
   { id: 'skool_msg',  label: 'Skool Nachrichten',       img: 'images/tasks/skool_msg.png',  type: 'check', pts: 10 },
   { id: 'instagram',  label: 'Instagram Post',           img: 'images/tasks/instagram.png',  type: 'check', pts: 20 },
-  { id: 'meditation', label: 'Meditation',                img: 'images/tasks/meditation.png', type: 'check',   pts: 15 },
+  { id: 'meditation', label: 'Meditation',                img: 'images/tasks/meditation.png', type: 'check', pts: 15 },
+  { id: 'fotos',      label: 'Fotos sortieren',           img: 'images/tasks/fotos.png',      type: 'check', pts: 10 },
   { id: 'staff',      label: 'Freestyle Staff',          img: 'images/tasks/staff.png',      type: 'minutes', pts: 0, perMin: 1 },
   { id: 'lesen',      label: 'Lesen',                    img: 'images/tasks/lesen.png',      type: 'minutes', pts: 0, perMin: 1 },
   { id: 'course1',    label: 'Kurs 2–4 Jahre planen',   img: 'images/tasks/course1.png',    type: 'check', pts: 15, weekly: true },
@@ -618,7 +619,7 @@ function renderStats() {
   document.getElementById('stats-period-label').textContent = getPeriodLabel(currentPeriod);
 
   let totalMembers = 0, totalInvoices = 0, totalMails = 0, totalInstagram = 0, totalReceipts = 0;
-  let totalStaff = 0, totalLesen = 0, totalMeditation = 0;
+  let totalStaff = 0, totalLesen = 0, totalMeditation = 0, totalFotos = 0;
   let sleep22 = 0, sleep23 = 0, sleep24 = 0, sleep99 = 0;
   for (const [, day] of days) {
     totalMembers  += (day.tasks.members?.count  || 0);
@@ -629,6 +630,7 @@ function renderStats() {
     totalLesen    += (day.tasks.lesen?.minutes  || 0);
     if (day.tasks.instagram?.done) totalInstagram++;
     if (day.tasks.meditation?.done) totalMeditation++;
+    if (day.tasks.fotos?.done) totalFotos++;
     const sv = day.tasks.sleep?.sleepVal;
     if (sv === 22) sleep22++;
     else if (sv === 23) sleep23++;
@@ -645,6 +647,7 @@ function renderStats() {
   document.getElementById('stat-staff').textContent     = totalStaff + ' Min';
   document.getElementById('stat-lesen').textContent      = totalLesen + ' Min';
   document.getElementById('stat-meditation').textContent = totalMeditation;
+  document.getElementById('stat-fotos').textContent     = totalFotos;
   document.getElementById('stat-sleep22').textContent   = sleep22;
   document.getElementById('stat-sleep23').textContent   = sleep23;
   document.getElementById('stat-sleep24').textContent   = sleep24;
@@ -662,8 +665,8 @@ function renderStats() {
 
   const barContainer = document.getElementById('week-bars');
   barContainer.innerHTML = '';
-  const dailyIds = ['members','invoices','mails','receipts','instagram','skool_msg','meditation','staff','lesen'];
-  const dailyLabels = { members:'👥 Mitglieder', invoices:'🧾 Rechnungen', mails:'📧 Mails', receipts:'🗂️ Belege', instagram:'📸 Instagram', skool_msg:'💬 Skool', meditation:'🧘 Meditation', staff:'🥢 Freestyle Staff', lesen:'📖 Lesen' };
+  const dailyIds = ['members','invoices','mails','receipts','instagram','skool_msg','meditation','fotos','staff','lesen'];
+  const dailyLabels = { members:'👥 Mitglieder', invoices:'🧾 Rechnungen', mails:'📧 Mails', receipts:'🗂️ Belege', instagram:'📸 Instagram', skool_msg:'💬 Skool', meditation:'🧘 Meditation', fotos:'📷 Fotos sortieren', staff:'🥢 Freestyle Staff', lesen:'📖 Lesen' };
   const maxDays = days.length || 1;
   for (const id of dailyIds) {
     const t = TASKS.find(x => x.id === id); if (!t) continue;
