@@ -223,11 +223,17 @@ function openModal(task) {
     : task.type === 'minutes' ? (alreadyMins > 0 ? `Bereits heute: ${alreadyMins} Min. — wie viele kommen noch dazu?` : 'Wie viele Minuten hast du heute gemacht?')
     : 'Hast du das heute gemacht?';
 
-  document.getElementById('modal-count-row').style.display = (task.type === 'count' || task.type === 'minutes') ? 'flex' : 'none';
-  document.getElementById('modal-check-row').style.display = task.type === 'check' ? 'block' : 'none';
-  document.getElementById('modal-sleep-row').style.display = task.type === 'sleep' ? 'block' : 'none';
-  // Minuten: max 99
-  document.getElementById('modal-count-row').dataset.maxVal = task.type === 'minutes' ? '99' : '9999';
+  document.getElementById('modal-count-row').style.display  = task.type === 'count' ? 'flex' : 'none';
+  document.getElementById('modal-slider-row').style.display  = task.type === 'minutes' ? 'block' : 'none';
+  document.getElementById('modal-check-row').style.display   = task.type === 'check' ? 'block' : 'none';
+  document.getElementById('modal-sleep-row').style.display   = task.type === 'sleep' ? 'block' : 'none';
+  document.getElementById('modal-count-row').dataset.maxVal  = '9999';
+  if (task.type === 'minutes') {
+    const slider = document.getElementById('modal-slider');
+    slider.value = 0;
+    modalCount = 0;
+    document.getElementById('slider-value-display').textContent = '0 Min.';
+  }
   selectedSleep = null;
   document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected'));
   updateCountDisplay();
@@ -797,6 +803,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxVal = parseInt(document.getElementById('modal-count-row').dataset.maxVal || '9999');
     if (modalCount < maxVal) { modalCount++; updateCountDisplay(); }
   };
+  // Minuten-Slider
+  document.getElementById('modal-slider').addEventListener('input', e => {
+    modalCount = parseInt(e.target.value);
+    document.getElementById('slider-value-display').textContent = modalCount + ' Min.';
+  });
+
   document.getElementById('btn-cancel').onclick = closeModal;
   document.getElementById('btn-confirm').onclick = () => {
     if (monthlyModalTask) confirmMonthlyModal();

@@ -200,7 +200,7 @@
     <div class="modal-title" id="modal-title">Aufgabe</div>
     <div class="modal-subtitle" id="modal-subtitle">Hast du dich darum gekümmert?</div>
 
-    <!-- Count input -->
+    <!-- Count input (+/- Buttons) -->
     <div class="count-input-row" id="modal-count-row">
       <button class="count-btn" id="btn-minus">−</button>
       <div>
@@ -208,6 +208,13 @@
         <div class="count-label">Anzahl</div>
       </div>
       <button class="count-btn" id="btn-plus">+</button>
+    </div>
+
+    <!-- Minuten-Schieberegler -->
+    <div id="modal-slider-row" style="display:none;padding:12px 0">
+      <div class="slider-value-display" id="slider-value-display">0 Min.</div>
+      <input type="range" id="modal-slider" min="0" max="99" value="0" step="1" class="minutes-slider">
+      <div class="slider-labels"><span>0</span><span>30</span><span>60</span><span>99</span></div>
     </div>
 
     <!-- Check only -->
