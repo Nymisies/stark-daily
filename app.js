@@ -118,6 +118,20 @@ ensureToday();
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 
+function formatMinutes(mins) {
+  if (mins <= 0) return '0 Min.';
+  const months = Math.floor(mins / (60 * 24 * 30));
+  const weeks  = Math.floor((mins % (60 * 24 * 30)) / (60 * 24 * 7));
+  const days   = Math.floor((mins % (60 * 24 * 7))  / (60 * 24));
+  const hours  = Math.floor((mins % (60 * 24))       / 60);
+  const rest   = mins % 60;
+  if (months >= 1) return `${months} Mon. ${weeks > 0 ? weeks + ' Wo.' : ''}`.trim();
+  if (weeks  >= 1) return `${weeks} Wo. ${days  > 0 ? days  + ' T.'  : ''}`.trim();
+  if (days   >= 1) return `${days} T. ${hours  > 0 ? hours  + ' Std.' : ''}`.trim();
+  if (hours  >= 1) return `${hours} Std. ${rest > 0 ? rest   + ' Min.' : ''}`.trim();
+  return `${rest} Min.`;
+}
+
 function getHighestUnlockedIdx(pts) {
   let idx = 0;
   for (let i = 0; i < AVATAR_LEVELS.length; i++) {
@@ -650,8 +664,8 @@ function renderStats() {
   document.getElementById('stat-streak').textContent    = state.streak || 0;
   document.getElementById('stat-instagram').textContent = totalInstagram;
   document.getElementById('stat-receipts').textContent  = totalReceipts;
-  document.getElementById('stat-staff').textContent     = totalStaff + ' Min';
-  document.getElementById('stat-lesen').textContent      = totalLesen + ' Min';
+  document.getElementById('stat-staff').textContent     = formatMinutes(totalStaff);
+  document.getElementById('stat-lesen').textContent      = formatMinutes(totalLesen);
   document.getElementById('stat-meditation').textContent = totalMeditation;
   document.getElementById('stat-fotos').textContent     = totalFotos;
   document.getElementById('stat-sleep22').textContent   = sleep22;
